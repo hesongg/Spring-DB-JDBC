@@ -8,8 +8,9 @@ import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
+import java.util.NoSuchElementException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 class MemberRepositoryV0Test {
@@ -19,7 +20,7 @@ class MemberRepositoryV0Test {
     @Test
     void crud() throws SQLException {
         //save
-        Member member = new Member("v0", 10000);
+        Member member = new Member("v100", 10000);
         repository.save(member);
 
         //findById
@@ -28,6 +29,16 @@ class MemberRepositoryV0Test {
 
         log.info("same = {}", member == findMember);
         log.info("equal = {}", member.equals(findMember) ); //@Data 에서 equals and hashcode 포함
-        Assertions.assertThat(findMember).isEqualTo(member);
+        assertThat(findMember).isEqualTo(member);
+
+        //update: money: 10000 -> 20000
+        repository.update(member.getMemberId(), 20000);
+        Member updateMember = repository.findById(member.getMemberId());
+        assertThat(updateMember.getMoney()).isEqualTo(20000);
+
+        //delete
+        repository.delete(member.getMemberId());
+        Assertions.assertThatThrownBy(() -> repository.findById(member.getMemberId()))
+                .isInstanceOf(NoSuchElementException.class);
     }
 }
